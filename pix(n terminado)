@@ -1,0 +1,483 @@
+// R.A: 2269236      ALUNO: RAMON CRIVELARI BATISTA        TURMA: ES31C - ES11    
+
+
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+float saldo_inicial = 0;
+float limite = 500;
+int auto_incremental = 0;
+int NumConta;
+//account conta[100];  
+
+
+
+        // ****STRUCTS
+
+typedef struct Data{  
+    int dia;
+    int mes;
+    int ano;
+}date;
+
+typedef struct Pessoa{   
+    char nome[50];
+    char cpf[15];
+    long long int celular;
+    char email[50];
+    date data_nascimento;   
+}person;
+
+typedef struct Conta {         
+    int num_incremental;  
+    person cliente; 
+    float saldo;
+    float limite;
+    date data_criacao; 
+    char senha[16];
+}account;
+
+account conta[100];         // se eu botar junto com as outras globais ele n reconhece o tipo da variavel, mas nessa posição reconhece
+
+    // ****VALIDACOES
+
+int validar_CPF(char aux[]){
+    int i = 0, cont = 0;
+    int tam = strlen(aux);
+
+    if(tam != 14){
+         return 0;   //zero quando tiver erro  e termina a funcao se tiver errado
+    }
+    if(aux[3] != '.' || aux[7] != '.' || aux[11] != '-' ){
+        return 0;   //zero quando tiver erro;
+    }    
+    
+    for(i = 0; i < tam; i++){
+        if(i == 3  || i == 7  || i == 11 ){
+            
+            continue;   //pula tudo os comandos a seguir, e incrementa o i
+        }    
+        if(!(aux[i] >= '0' &&  aux[i] <= '9')){  // se tiver nesse intervalo, é um numero
+            return 0;
+        }
+    }
+   return 1;
+}   
+
+int validar_CELULAR(long long int cel){    // faltou validar os DDDs
+    char celular[11];
+
+    sprintf(celular, "%lld", cel); 
+    int tam = strlen(celular);  
+
+    if(tam != 11){      
+        return 0;
+    }
+
+    if(celular[0] != '4' && celular[0] != '1' ) {
+        return 0;
+    }    
+    
+    if(celular[1] < '1'){
+        return 0;  
+    } 
+    if(celular[1] > '4'){
+        return 0;
+    }
+   
+    return 1;
+    
+}
+
+int validar_EMAIL(char email[]){  // faltou validar o @ e pontos. 
+    int i;
+    int tam = strlen(email);
+    int arroba = 0, primeiroPonto = 0, menosPonto = 0, maisPonto = 0;
+
+    if(tam < 15){   // caso o tamanho do email seja menor q 15 caracteres (minimo esperado), o programa termina
+        return 0;
+    }
+    for(i = 0; i < tam ; i++){
+        if(email[i] == '@'){       
+            if (arroba)
+                break;      // se tiver dois @ o programa termina
+                arroba = 1;
+            if (i < 4)
+                break;     // caso o @ venha antes dos 4 caracteres iniciais (minimo esperado segundo o enunciado inicial do trabalho), o programa termina
+        }
+
+        else if (arroba) {  // verifica se ja existe, encontrou um '@'
+            if (primeiroPonto) {   // verifica se ja encontrou '.' depois do @
+                maisPonto++;    
+            }
+        }
+
+        else if(email[i] == '.') {      
+            primeiroPonto = 1;
+                if (menosPonto < 3) {       //caso o '.' depois do @ venha antes de 3 caracteres (minimo esperado segundo o enunciado inicial do trabalho), o programa termina
+                    break; 
+                }
+        }
+
+        else {
+            menosPonto++;
+        }
+    }
+    if (i == tam && maisPonto > 1){       // verificacao p retornar ou nao o dado conta.cliente.email
+        return 1;   
+    }
+    else{
+        return 0;
+    }        
+    
+}  
+
+int validar_DIA(int dia){
+    if(dia < 1 || dia > 30){
+        return 0;
+    }
+    return 1;
+}
+    
+int validar_MES(int mes){
+    if(mes < 1 || mes > 12){
+        return 0 ;
+    }
+    return 1;
+}
+
+int validar_ANO(int ano){              
+    if(ano < 2000 || ano > 2020){
+        return 0;
+    }
+    return 1;
+}
+
+
+int validar_SENHA(char aux[]){  
+    int i, maiuscula = 0, minuscula = 0, numero = 0;
+    int tam = strlen(aux);
+
+    if(tam < 7 || tam > 11){     
+        return 0;
+    }
+    
+    /*for(i = 0; i < tam; i++) { 
+        if(aux[i] >= 'a' && aux[i <= 'z']){
+            minuscula = 1;
+        }else if(aux[i] >= 'A' && aux[i] <= 'Z'){
+            maiuscula = 1;
+        }else if(aux[i] >= '0' && aux[i] <= '9'){
+            numero = 1;
+        }    
+    }
+    if(minuscula == 1 && maiuscula == 1 && numero == 1){
+        return 0;
+    }
+    else {
+        return 1;
+    }*/
+}
+
+
+        // ****FUNCOES    
+
+/*int MENU(int opt_menu){
+    printf("===========================================\n");
+    printf("\t\tMENU:\n");
+    printf("===========================================\n");
+    printf("1-Criar conta\n");
+    printf("2-Consultar extrato\n");
+    printf("3-Excluir conta\n");
+    printf("4-Listar contas\n");  
+    printf("5-Depositar valores\n");
+    printf("6-Realizar pagamento via Pix\n");
+    printf("Digite sua escolha: \n");
+    scanf("%d", &opt_menu);
+    getchar();
+    
+    return opt_menu;
+}*/
+
+account func_criar_conta(){
+    account conta;
+    int verifica_cpf, verifica_celular, verifica_email, verifica_dia, verifica_mes, verifica_ano, verifica_senha;
+    int MAIORIDADE; 
+
+    conta.num_incremental = auto_incremental++;
+   
+    printf("Informe seu nome completo: ");
+    fgets(conta.cliente.nome, 50, stdin);
+
+    printf("Digite seu CPF: ");
+    fgets(conta.cliente.cpf, 15, stdin);
+        do{
+            verifica_cpf = validar_CPF(conta.cliente.cpf);
+                if(verifica_cpf == 0){
+                    printf("CPF invalido, digite novamente: ");
+                    fgets(conta.cliente.cpf, 15, stdin);
+                }
+        }while(verifica_cpf == 0);   
+      
+
+    printf("Telefone/celular: ");
+    getchar();
+    scanf("%lld", &conta.cliente.celular);
+        do{
+                verifica_celular = validar_CELULAR(conta.cliente.celular);
+                    if(verifica_celular == 0){
+                        printf("Celular invalido, digite novamente: ");
+                        scanf("%lld", &conta.cliente.celular);
+                    }
+        }while(verifica_celular == 0);
+    while(getchar()!= '\n'); 
+
+    printf("Digite seu email: ");
+    fgets(conta.cliente.email, 50, stdin);
+        do{
+            verifica_email = validar_EMAIL(conta.cliente.email);
+                if(verifica_email == 0){
+                    printf("Email invalido, digite novamente: ");
+                    fgets(conta.cliente.email, 50, stdin);
+                }
+        }while(verifica_email == 0);
+     
+
+    printf("Digite sua data de nascimento");
+    printf("\nDia: ");
+    scanf("%d", &conta.cliente.data_nascimento.dia);
+        do{
+            verifica_dia = validar_DIA(conta.cliente.data_nascimento.dia);
+                if(verifica_dia == 0){
+                    printf("Dia invalido, digite novamente: ");
+                    scanf("%d", &conta.cliente.data_nascimento.dia);
+                }
+        }while(verifica_dia == 0);
+    
+
+    printf("Mes: ");
+    scanf("%d", &conta.cliente.data_nascimento.mes);
+        do{
+            verifica_mes = validar_MES(conta.cliente.data_nascimento.mes);
+                if(verifica_mes == 0){
+                    printf("Mes invalido, digite novamente: ");
+                    scanf("%d", &conta.cliente.data_nascimento.mes);
+                }
+        }while(verifica_mes == 0);
+    
+
+    printf("Ano: ");
+    scanf("%d", &conta.cliente.data_nascimento.ano);
+        do{
+            verifica_ano = validar_ANO(conta.cliente.data_nascimento.ano);
+                if(verifica_ano == 0){
+                    printf("Ano invalido, digite novamente: ");
+                    scanf("%d", &conta.cliente.data_nascimento.ano);
+                }
+        }while(verifica_ano == 0);
+
+    printf("Data de criacao da conta");
+    printf("\nDia: ");
+    scanf("%d", &conta.data_criacao.dia);
+        do{
+            verifica_dia = validar_DIA(conta.data_criacao.dia);
+                if(verifica_dia == 0){
+                    printf("Dia invalido, digite novamente: ");
+                    scanf("%d", &conta.data_criacao.dia);
+                }
+        }while(verifica_dia == 0);
+
+    printf("Mes: ");
+    scanf("%d", &conta.data_criacao.mes);
+        do{
+            verifica_mes = validar_MES(conta.data_criacao.mes);
+                if(verifica_mes == 0){
+                    printf("Mes invalido, digite novamente: ");
+                    scanf("%d", &conta.data_criacao.mes);
+                }
+        }while(verifica_mes == 0);
+
+    printf("Ano: ");
+    scanf("%d", &conta.data_criacao.ano);
+        do{
+            verifica_ano = validar_ANO(conta.data_criacao.ano);
+                if(verifica_ano == 0){
+                    printf("Ano invalido, digite novamente: ");
+                    scanf("%d", &conta.data_criacao.ano);
+                }
+        }while(verifica_ano == 0);
+
+    if(conta.data_criacao.ano - conta.cliente.data_nascimento.ano < 18){
+        printf("Voce nao possui a idade necessaria para criar uma conta\n.");
+        exit(0);
+    }    
+
+    while(getchar()!= '\n'); 
+
+    printf("Digite uma senha entre 6-10 digitos, com pelo menos 1 letra maiuscula, 1 minuscula e 1 numero: ");
+    fgets(conta.senha, 16, stdin);
+        do{
+            verifica_senha = validar_SENHA(conta.senha);
+                if(verifica_senha == 0){
+                    printf("Senha invalida, digite outra senha: ");
+                    fgets(conta.senha, 16, stdin);
+                }
+        }while(verifica_senha == 0);
+    
+
+    conta.saldo = 0;
+    conta.limite = 500;
+
+    printf("Seu saldo inicial equivale a: %.2f\n", conta.saldo);
+
+    return conta;
+}
+
+/*void func_consultar_extrato(int cont){
+    printf("\nSeu saldo equivale a: %0.2f reais", conta[cont].saldo);
+
+}*/
+
+/*void func_listar_contas(int contListar){      // nao deu certo pois mesmo apos criar as contas o programa apresenta todos os dados das mesmas como 0.
+     
+    for(contListar = 0; contListar < auto_incremental; contListar++){
+        printf("\nCONTA ID: %d", conta[contListar].num_incremental);
+        printf("\nNome: %s", conta[contListar].cliente.nome);
+        printf("\nCPF: %s", conta[contListar].cliente.cpf);
+        printf("\nCelular: %lld", conta[contListar].cliente.celular);
+        printf("\nEmail: %s", conta[contListar].cliente.email);
+        printf("\nData nascimento-\n");
+        printf("Dia: %d Mes: %d Ano: %d", conta[contListar].cliente.data_nascimento.dia, conta[contListar].cliente.data_nascimento.mes, conta[contListar].cliente.data_nascimento.ano );
+        printf("\nData de criacao-\n");
+        printf("Dia: %d Mes: %d Ano: %d", conta[contListar].data_criacao.dia, conta[contListar].data_criacao.mes, conta[contListar].data_criacao.ano);
+        printf("\nSaldo: %.2f", conta[contListar].saldo);
+        printf("\n\n\n");
+    }
+}*/
+
+void func_depositar_valor(int i){  
+    float deposito;
+    
+
+    printf("Quanto deseja depositar? ");
+    scanf("%f", &deposito);
+
+    conta[i].saldo = conta[i].saldo + deposito;
+    printf("\nConta ID: %d, seu saldo equivale a: %.2f\n", conta[i].num_incremental, conta[i].saldo);
+    
+}
+
+int main(){
+    account conta[100];
+    int opt_menu;
+    int i = 0;
+    int j = 1;
+
+    do{
+        //opt_menu = MENU();
+            printf("===========================================\n");
+            printf("\t\tMENU:\n");
+            printf("===========================================\n");
+            printf("1-Criar conta\n");
+            printf("2-Consultar extrato\n");
+            printf("3-Excluir conta\n");
+            printf("4-Listar contas\n");  // a auto_incremental vai ser usada no for limitando
+            printf("5-Depositar valores\n");
+            printf("6-Realizar pagamento via Pix\n");
+            printf("Digite sua escolha: \n");
+            scanf("%d", &opt_menu);
+            getchar();
+    
+        switch(opt_menu)
+        {
+            case 1:
+                conta[i] = func_criar_conta();
+                printf("Conta de ID: %d criada com sucesso!\n", conta[i].num_incremental);
+                //printf("Conta de ID: %d criada com sucesso!\n", j);
+                //j++;
+                break;
+
+            case 2:  //função consultar_extrato não estava funcionando, fiz o codigo direto na main    
+                printf("Digite o numero da conta que deseja consultar: ");
+                scanf("%d", &NumConta);
+                
+                printf("\nSeu saldo equivale a: %0.2f\n", conta[NumConta].saldo);
+                break;
+
+            case 3:
+                
+                break;   
+
+            case 4:{
+                int contListar;
+                for(contListar = 0; contListar < auto_incremental; contListar++){
+                    printf("\nCONTA ID: %d", conta[contListar].num_incremental);
+                    printf("\nNome: %s", conta[contListar].cliente.nome);
+                    printf("\nCPF: %s", conta[contListar].cliente.cpf);
+                    printf("\nCelular: %lld", conta[contListar].cliente.celular);
+                    printf("\nEmail: %s", conta[contListar].cliente.email);
+                    printf("\nData nascimento-\n");
+                    printf("Dia: %d Mes: %d Ano: %d", conta[contListar].cliente.data_nascimento.dia, conta[contListar].cliente.data_nascimento.mes, conta[contListar].cliente.data_nascimento.ano );
+                    printf("\nData de criacao-\n");
+                    printf("Dia: %d Mes: %d Ano: %d", conta[contListar].data_criacao.dia, conta[contListar].data_criacao.mes, conta[contListar].data_criacao.ano);
+                    printf("\nSaldo: %.2f", conta[contListar].saldo);
+                    printf("\n\n\n");
+                }
+            }
+                
+                break;
+
+            case 5:{
+                float deposito;
+                printf("Digite o numero da conta em que sera realizado o deposito: ");
+                scanf("%d", &NumConta);
+                printf("\n");
+                printf("Quanto deseja depositar? (limite de 500 contando com o saldo atual) ");
+                scanf("%f", &deposito);
+                do{
+                    if(conta[NumConta].saldo + deposito > 500){
+                        printf("Valor acima do limite, digite novamente: ");
+                        scanf("%f", &deposito);
+                    }
+                }while(conta[NumConta].saldo + deposito > 500);
+
+                conta[NumConta].saldo = conta[NumConta].saldo + deposito;
+                  
+            }
+                
+                //func_depositar_valor(conta[i].num_incremental);              //** n funcionou****************************
+                break;
+
+            case 6:{
+                int conta_retirada, conta_depositar;
+                float din_retirar, din_transferido;
+
+                printf("\nInforme sua conta: ");
+                scanf("%d", &conta_retirada);
+                printf("\nSaldo Atual: %.2f", conta[conta_retirada].saldo);
+                printf("\nValor a ser transferido: ");
+                scanf("%f",&din_retirar);
+                conta[conta_retirada].saldo = conta[conta_retirada].saldo - din_retirar;
+                printf("\nSaldo pos transferencia: %.2f", conta[conta_retirada].saldo);
+
+                printf("\nDigite o ID da conta para qual deseja transferir: ");
+                scanf("%d", &conta_depositar);
+                din_transferido = din_retirar;
+                conta[conta_depositar].saldo = conta[conta_depositar].saldo + din_transferido;
+                printf("\n...Transferencia realizada com sucesso!");
+            }
+                
+                break;
+
+            default:
+
+                break;
+
+        }
+        i++;    
+    }while(opt_menu >= 1 || opt_menu <= 6);
+}
+
+
