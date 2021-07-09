@@ -1,0 +1,21 @@
+#include <stdio.h>
+
+int main(){
+    double A[100], *p;
+    int i, j;
+    
+    for(i=0; i<100; i++){
+        scanf("%lf", &A[i]);
+        p = A;
+    }    
+    for(j = 0; j < 100; j++){
+        if (*p <=10){
+            printf("A[%d] = %.1lf\n", j, *p );
+            p++;
+        }
+        else{
+            p++;
+        }
+    }
+    return 0;
+} 
