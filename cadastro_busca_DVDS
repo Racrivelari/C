@@ -1,0 +1,72 @@
+#define LIM 20
+#include <stdio.h>
+#include <string.h>
+
+typedef struct DVD{
+    char titulo[50];
+    char genero[50];
+    float duracao;
+    int prateleira;
+
+}dvd;
+
+void mostrar_dvds(dvd DVDS){
+    char opt_gen[20];
+    int i;
+    int j;
+
+    for(i = 0; i<LIM; i++){
+        printf("Informe o genero que deseja buscar: ");
+        fgets(opt_gen, 20, stdin);
+            if(strcmp(DVDS[i].genero, "acao") == 0){
+            
+        }
+    }
+
+
+
+}
+
+int main(){
+    dvd X[LIM];
+    int i = 0;
+    
+    for( i = 0; i < LIM; i ++){
+        
+        printf("\nTitulo: ");
+        fflush(stdin);
+        fgets(X[i].titulo, 50, stdin);
+
+        printf("Genero: ");
+        fgets(X[i].genero, 50, stdin);
+
+        printf("Tempo de duracao (em minutos): ");
+        scanf("%f", &X[i].duracao);
+
+        printf("Prateleira (numero): ");
+        scanf("%d", &X[i].prateleira);
+
+        printf("\n");
+        
+        printf("**********************************************************************\n");
+        printf("\tTitulo: ");
+        puts(X[i].titulo);
+        printf("\tGenero: ");
+        puts(X[i].genero);
+        printf("\tTempo de duracao: ");
+        printf("%.0f minutos", X[i].duracao);
+
+        printf("\n\tPrateleira: ");
+        printf("%d", X[i].prateleira);
+        printf("\n");
+        printf("**********************************************************************");
+        
+        
+    }
+
+    if(i = LIM){
+           printf("\nLimite de cadastramento de dvds alcancado.");
+        }    
+	
+    return 0;
+}    
