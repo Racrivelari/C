@@ -1,0 +1,25 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int somatoria (int a, int b){
+    if (a == 0 || b == 0){
+        return 0;
+    }
+    else {
+        return b + somatoria(a-1,b);
+    }
+}
+
+
+int main(){
+    int a, b;
+    printf("Digite um valor: ");
+    scanf("%d", &a);
+    printf("Digite outro valor: ");
+    scanf("%d", &b);
+    //somatoria(a,b);
+    printf("O resultado da multiplicacao entre eles eh: %d", somatoria(a,b));
+
+    return 0;
+}
